@@ -12,7 +12,7 @@ COPY nginx_upstream_check_module /work/nginx_upstream_check_module
 
 RUN curl -fsSL "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" | tar -xz && \
     cd nginx-${NGINX_VERSION} && \
-    patch -p1 < ../nginx_upstream_check_module/check_1.20.1+.patch && \
+    patch -p1 < ../nginx_upstream_check_module/check_1.30.4+.patch && \
     ./configure --add-module=../nginx_upstream_check_module && \
     make && \
     make install
