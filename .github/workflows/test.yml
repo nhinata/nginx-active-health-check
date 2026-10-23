@@ -1,0 +1,22 @@
+name: test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  schedule:
+    # weekly, to notice when base images or nginx downloads break the build
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - run: ./scripts/test.sh

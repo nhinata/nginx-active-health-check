@@ -2,6 +2,8 @@
 
 [English](README.md) | 日本語
 
+[![test](https://github.com/nhinata/nginx_with_health_check/actions/workflows/test.yml/badge.svg)](https://github.com/nhinata/nginx_with_health_check/actions/workflows/test.yml)
+
 OSS 版 nginx で **active health check**（nginx 側から定期的にバックエンドへリクエストを送り、生死を判定する仕組み）を試すための再現環境です。
 
 OSS 版 nginx に標準で備わっているのは、実際のリクエストが失敗したときにサーバを外す passive health check（`max_fails` / `fail_timeout`）だけです。active health check は有償の NGINX Plus の機能のため、ここではサードパーティの [nginx_upstream_check_module](https://github.com/yaoweibin/nginx_upstream_check_module) を組み込んだ nginx をビルドしています。
@@ -87,6 +89,16 @@ docker compose unpause backend04   # 数秒で up に戻る
 [error] 9#0: disable check peer: 172.19.0.3:80
 [error] 8#0: enable check peer: 172.19.0.3:80
 ```
+
+## テストを実行する
+
+`scripts/test.sh` はデモを起動し、止めた／応答しないバックエンドが down と判定されること、down の間は振り分けられないこと、up に戻ることを確認します。終わるとコンテナを停止します。
+
+```sh
+./scripts/test.sh
+```
+
+同じスクリプトを GitHub Actions で、push・プルリクエストごとと毎週、x86_64 と ARM64 の両方で実行しています。
 
 ## 設定
 
