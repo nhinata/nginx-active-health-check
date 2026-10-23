@@ -1,4 +1,12 @@
-version: '3'
+x-backend: &backend
+  image: nginx:1.30-alpine
+  command:
+    - sh
+    - -c
+    - |
+      echo "$$HOSTNAME" > /usr/share/nginx/html/index.html
+      echo ok > /usr/share/nginx/html/health.html
+      exec nginx -g 'daemon off;'
 
 services:
   nginx:
@@ -9,6 +17,26 @@ services:
       TZ: Asia/Tokyo
     ports:
       - "80:80"
-    working_dir: /work
-    tty: true
-    stdin_open: true
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - backend01
+      - backend02
+      - backend03
+      - backend04
+      - backend05
+
+  backend01:
+    <<: *backend
+    hostname: backend01
+  backend02:
+    <<: *backend
+    hostname: backend02
+  backend03:
+    <<: *backend
+    hostname: backend03
+  backend04:
+    <<: *backend
+    hostname: backend04
+  backend05:
+    <<: *backend
+    hostname: backend05
