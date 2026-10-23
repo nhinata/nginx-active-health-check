@@ -138,6 +138,10 @@ server {
 
 `docker/nginx/nginx_upstream_check_module/` は [yaoweibin/nginx_upstream_check_module](https://github.com/yaoweibin/nginx_upstream_check_module) のコミット [`02c6c9d`](https://github.com/yaoweibin/nginx_upstream_check_module/tree/02c6c9de14ca1e60adb9f48179707c57d532d622) から、ビルドに必要なファイルと README を取り込んだものです。BSD ライセンスで、著作権表示とライセンス本文は同ディレクトリの `README` にあります。
 
+## ライセンス
+
+このリポジトリは [MIT License](LICENSE) です。ただし `docker/nginx/nginx_upstream_check_module/` 配下は、上記のとおりモジュール本来の BSD ライセンスに従います。
+
 ## 参考
 
 - [nginx_upstream_check_module](https://github.com/yaoweibin/nginx_upstream_check_module) — 使用しているモジュール。設定項目の詳細はこちらの README
