@@ -10,6 +10,8 @@ Open source nginx only ships with passive health checks (`max_fails` / `fail_tim
 
 A single `docker compose up` starts nginx and five backends. Stop a backend and watch it get marked down; bring it back and watch it recover.
 
+![Stopping backend03 marks it down on the status page, and starting it again brings it back up](docs/demo.gif)
+
 > This is a sample for learning and testing. For production use of active health checks, also consider NGINX Plus, Tengine or HAProxy, which support them out of the box.
 
 ## How it works
