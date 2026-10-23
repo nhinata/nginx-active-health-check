@@ -1,14 +1,16 @@
 # nginx_with_health_check
 
-OSS 版 nginx で **active health check**（nginx 側から定期的にバックエンドへリクエストを送り、生死を判定する仕組み）を試すための再現環境です。
+English | [日本語](README.ja.md)
 
-OSS 版 nginx に標準で備わっているのは、実際のリクエストが失敗したときにサーバを外す passive health check（`max_fails` / `fail_timeout`）だけです。active health check は有償の NGINX Plus の機能のため、ここではサードパーティの [nginx_upstream_check_module](https://github.com/yaoweibin/nginx_upstream_check_module) を組み込んだ nginx をビルドしています。
+A ready-to-run environment for trying **active health checks** (nginx periodically sends requests to each backend and marks it up or down) on open source nginx.
 
-`docker compose up` だけで nginx とバックエンド 5 台が起動し、バックエンドを止めると down と判定され、戻すと up に復帰する様子を手元で確認できます。
+Open source nginx only ships with passive health checks (`max_fails` / `fail_timeout`), which take a server out of rotation after real requests to it fail. Active health checks are a feature of the commercial NGINX Plus, so this repository builds nginx with the third-party [nginx_upstream_check_module](https://github.com/yaoweibin/nginx_upstream_check_module).
 
-> 学習・検証用のサンプルです。本番で active health check を使う場合は、標準で同機能を持つ NGINX Plus・Tengine・HAProxy なども検討してください。
+A single `docker compose up` starts nginx and five backends. Stop a backend and watch it get marked down; bring it back and watch it recover.
 
-## 構成
+> This is a sample for learning and testing. For production use of active health checks, also consider NGINX Plus, Tengine or HAProxy, which support them out of the box.
+
+## How it works
 
 ```
 curl localhost:80     --->  nginx  --- proxy_pass --->  backend01 ... backend05
@@ -16,26 +18,26 @@ curl localhost:80     --->  nginx  --- proxy_pass --->  backend01 ... backend05
 curl localhost:8080   --->  /status (up / down list)
 ```
 
-| ファイル | 内容 |
+| File | Purpose |
 |---|---|
-| `docker-compose.yml` | nginx と確認用バックエンド `backend01`〜`backend05` |
-| `docker/nginx/Dockerfile` | nginx 1.30.6 にモジュールのパッチを当ててソースからビルド |
-| `docker/nginx/nginx.conf` | upstream とヘルスチェックの設定 |
-| `docker/nginx/nginx_upstream_check_module/` | モジュール本体（取り込み元は[下記](#同梱しているモジュール)） |
+| `docker-compose.yml` | nginx and the demo backends `backend01`–`backend05` |
+| `docker/nginx/Dockerfile` | Builds nginx 1.30.6 from source with the module's patch applied |
+| `docker/nginx/nginx.conf` | Upstream and health check configuration |
+| `docker/nginx/nginx_upstream_check_module/` | The module source (see [Bundled module](#bundled-module) for where it comes from) |
 
-バックエンドは `/` で自分のホスト名を、`/health.html` で `ok` を返します。
+Each backend returns its own hostname at `/` and `ok` at `/health.html`.
 
-## クイックスタート
+## Quick start
 
-必要なもの: Docker（Compose v2）。ポート 80 と 8080 を使います。
+Requirements: Docker with Compose v2. Ports 80 and 8080 must be free. Tested on ARM64 (Apple Silicon).
 
 ```sh
 docker compose up -d --build
-curl http://localhost/                          # backend01〜05 のどれかが返る
-curl "http://localhost:8080/status?format=csv"  # 各バックエンドの状態
+curl http://localhost/                          # returns one of backend01-backend05
+curl "http://localhost:8080/status?format=csv"  # health of each backend
 ```
 
-5 台とも `up` になっていれば正常です。
+All five backends should be `up`:
 
 ```
 0,api,172.19.0.4:80,up,3,0,http,80
@@ -45,40 +47,40 @@ curl "http://localhost:8080/status?format=csv"  # 各バックエンドの状態
 4,api,172.19.0.2:80,up,3,0,http,80
 ```
 
-列は左から、番号・upstream 名・アドレス・状態・連続成功回数・連続失敗回数・チェック種別・ポートです。`?format=csv` を外すと HTML、`?format=json` で JSON になります。
+The columns are: index, upstream name, address, status, consecutive successes, consecutive failures, check type and port. Drop `?format=csv` for an HTML page, or use `?format=json` for JSON.
 
-終わったら `docker compose down` で停止します。
+Run `docker compose down` when you are done.
 
-## 障害を起こしてみる
+## Simulating failures
 
-### バックエンドを止める
+### Stop a backend
 
 ```sh
 docker compose stop backend03
 ```
 
-15 秒ほどで backend03（3 行目）が `down` になります。
+After about 15 seconds, backend03 (the third row) turns `down`:
 
 ```
 2,api,172.19.0.5:80,down,0,2,http,80
 ```
 
-この間も `curl http://localhost/` はすべて 200 で返り、backend03 には振り分けられません。
+Meanwhile, every `curl http://localhost/` still returns 200, and no requests are sent to backend03.
 
 ```sh
-docker compose start backend03   # 数秒で up に戻る
+docker compose start backend03   # back up within a few seconds
 ```
 
-### 応答しない状態にする
+### Make a backend unresponsive
 
-プロセスは生きているが応答しない、という状態は `pause` で再現できます。
+Use `pause` to simulate a backend whose process is alive but does not respond:
 
 ```sh
-docker compose pause backend04     # 15 秒ほどで down
-docker compose unpause backend04   # 数秒で up に戻る
+docker compose pause backend04     # down after about 15 seconds
+docker compose unpause backend04   # back up within a few seconds
 ```
 
-判定の経過は `docker compose logs nginx` で確認できます。
+You can follow the checks with `docker compose logs nginx`:
 
 ```
 [error] 9#0: check time out with peer: 172.19.0.3:80
@@ -86,9 +88,9 @@ docker compose unpause backend04   # 数秒で up に戻る
 [error] 8#0: enable check peer: 172.19.0.3:80
 ```
 
-## 設定
+## Configuration
 
-`docker/nginx/nginx.conf` の該当部分です。
+The relevant part of `docker/nginx/nginx.conf`:
 
 ```nginx
 upstream api {
@@ -104,19 +106,19 @@ upstream api {
 }
 ```
 
-| 項目 | 値 | 意味 |
+| Directive | Value | Meaning |
 |---|---|---|
-| `interval` | 5000 | チェックの間隔（ミリ秒） |
-| `timeout` | 3000 | この時間内に応答がなければ失敗とみなす（ミリ秒） |
-| `fall` | 2 | 連続でこの回数失敗すると down |
-| `rise` | 1 | 連続でこの回数成功すると up |
-| `type` / `port` | http / 80 | HTTP でポート 80 にチェックを送る |
-| `check_http_send` | — | チェックで送るリクエスト。`Host` を付けないと、バーチャルホストを使うバックエンドで 404 になり誤判定する |
-| `check_http_expect_alive` | 2xx, 3xx | 正常とみなすステータス |
+| `interval` | 5000 | Time between checks (ms) |
+| `timeout` | 3000 | A check fails if there is no response within this time (ms) |
+| `fall` | 2 | Mark a server down after this many consecutive failures |
+| `rise` | 1 | Mark a server up after this many consecutive successes |
+| `type` / `port` | http / 80 | Send HTTP checks to port 80 |
+| `check_http_send` | — | The request sent as a check. Without a `Host` header, backends that use virtual hosts return 404 and are wrongly marked down |
+| `check_http_expect_alive` | 2xx, 3xx | Status codes treated as healthy |
 
-この設定での実測（各 1 回）は、停止・無応答とも down まで 15〜16 秒、復帰は 4 秒でした。早く検知したい場合は `interval` や `timeout` を短くします。
+With these settings, it took 15–16 seconds for a stopped or unresponsive backend to be marked down, and 4 seconds for it to come back up (one measurement each). Lower `interval` and `timeout` to detect failures faster.
 
-状態一覧は 8080 番の別 server に置き、`docker-compose.yml` でホストの `127.0.0.1` にだけ公開しています。バックエンドの構成が外から見えないようにするためです。
+The status page is served by a separate server on port 8080, which `docker-compose.yml` publishes only on the host's `127.0.0.1`, so the backend layout is not exposed to the outside:
 
 ```nginx
 server {
@@ -128,23 +130,23 @@ server {
 }
 ```
 
-## 注意点
+## Caveats
 
-- nginx はバックエンドの IP を起動時に一度だけ解決します。バックエンドを作り直して IP が変わった場合は `docker compose restart nginx` が必要です。
-- 少ないリクエスト数だと 1 台に偏って見えることがあります。nginx の worker ごとに振り分けの順番を持っているためで、回数を増やすと分散します。
-- モジュールのパッチは nginx のバージョンごとに用意されています。nginx のバージョン（`Dockerfile` の `NGINX_VERSION`）を変える場合は、対応するパッチを選び直してください。
+- nginx resolves backend addresses only once, at startup. If you recreate a backend and its IP address changes, run `docker compose restart nginx`.
+- With only a few requests, traffic may look concentrated on one backend. Each nginx worker keeps its own round-robin position; send more requests and they spread out.
+- The module provides a separate patch for each range of nginx versions. If you change the nginx version (`NGINX_VERSION` in the `Dockerfile`), pick the matching patch.
 
-## 同梱しているモジュール
+## Bundled module
 
-`docker/nginx/nginx_upstream_check_module/` は [yaoweibin/nginx_upstream_check_module](https://github.com/yaoweibin/nginx_upstream_check_module) のコミット [`02c6c9d`](https://github.com/yaoweibin/nginx_upstream_check_module/tree/02c6c9de14ca1e60adb9f48179707c57d532d622) から、ビルドに必要なファイルと README を取り込んだものです。BSD ライセンスで、著作権表示とライセンス本文は同ディレクトリの `README` にあります。
+`docker/nginx/nginx_upstream_check_module/` contains the files needed for the build, plus the README, taken from commit [`02c6c9d`](https://github.com/yaoweibin/nginx_upstream_check_module/tree/02c6c9de14ca1e60adb9f48179707c57d532d622) of [yaoweibin/nginx_upstream_check_module](https://github.com/yaoweibin/nginx_upstream_check_module). The module is BSD licensed; its copyright notice and license text are in the `README` in that directory.
 
-## ライセンス
+## License
 
-このリポジトリは [MIT License](LICENSE) です。ただし `docker/nginx/nginx_upstream_check_module/` 配下は、上記のとおりモジュール本来の BSD ライセンスに従います。
+This repository is licensed under the [MIT License](LICENSE). The files under `docker/nginx/nginx_upstream_check_module/` remain under the module's own BSD license, as described above.
 
-## 参考
+## References
 
-- [nginx_upstream_check_module](https://github.com/yaoweibin/nginx_upstream_check_module) — 使用しているモジュール。設定項目の詳細はこちらの README
-- [HTTP Health Checks（NGINX ドキュメント）](https://docs.nginx.com/nginx/admin-guide/load-balancer/http-health-check/) — passive と active の違い
-- [ngx_stream_upstream_module](https://nginx.org/en/docs/stream/ngx_stream_upstream_module.html) — TCP/UDP（stream）の upstream 設定
-- [ngx_stream_upstream_hc_module](https://nginx.org/en/docs/stream/ngx_stream_upstream_hc_module.html) — NGINX Plus の stream 向け active health check
+- [nginx_upstream_check_module](https://github.com/yaoweibin/nginx_upstream_check_module) — the module used here; see its README for all directives
+- [HTTP Health Checks (NGINX documentation)](https://docs.nginx.com/nginx/admin-guide/load-balancer/http-health-check/) — passive vs. active health checks
+- [ngx_stream_upstream_module](https://nginx.org/en/docs/stream/ngx_stream_upstream_module.html) — upstream configuration for TCP/UDP (stream)
+- [ngx_stream_upstream_hc_module](https://nginx.org/en/docs/stream/ngx_stream_upstream_hc_module.html) — NGINX Plus active health checks for stream
