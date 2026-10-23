@@ -31,7 +31,7 @@ Each backend returns its own hostname at `/` and `ok` at `/health.html`.
 
 ## Quick start
 
-Requirements: Docker with Compose v2. Ports 80 and 8080 must be free. Tested on ARM64 (Apple Silicon).
+Requirements: Docker with Compose v2. Ports 80 and 8080 must be free. Tested on x86_64 and ARM64.
 
 ```sh
 docker compose up -d --build

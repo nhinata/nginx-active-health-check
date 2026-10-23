@@ -31,7 +31,7 @@ curl localhost:8080   --->  /status (up / down list)
 
 ## クイックスタート
 
-必要なもの: Docker（Compose v2）。ポート 80 と 8080 を使います。ARM64（Apple Silicon）で動作確認しています。
+必要なもの: Docker（Compose v2）。ポート 80 と 8080 を使います。x86_64 と ARM64 で動作確認しています。
 
 ```sh
 docker compose up -d --build
