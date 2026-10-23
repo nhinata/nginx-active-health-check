@@ -1,8 +1,8 @@
-# nginx_with_health_check
+# nginx-active-health-check
 
 English | [日本語](README.ja.md)
 
-[![test](https://github.com/nhinata/nginx_with_health_check/actions/workflows/test.yml/badge.svg)](https://github.com/nhinata/nginx_with_health_check/actions/workflows/test.yml)
+[![test](https://github.com/nhinata/nginx-active-health-check/actions/workflows/test.yml/badge.svg)](https://github.com/nhinata/nginx-active-health-check/actions/workflows/test.yml)
 
 A ready-to-run environment for trying **active health checks** (nginx periodically sends requests to each backend and marks it up or down) on open source nginx.
 
