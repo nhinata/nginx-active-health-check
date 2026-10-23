@@ -1,8 +1,8 @@
-# nginx_with_health_check
+# nginx-active-health-check
 
 [English](README.md) | 日本語
 
-[![test](https://github.com/nhinata/nginx_with_health_check/actions/workflows/test.yml/badge.svg)](https://github.com/nhinata/nginx_with_health_check/actions/workflows/test.yml)
+[![test](https://github.com/nhinata/nginx-active-health-check/actions/workflows/test.yml/badge.svg)](https://github.com/nhinata/nginx-active-health-check/actions/workflows/test.yml)
 
 OSS 版 nginx で **active health check**（nginx 側から定期的にバックエンドへリクエストを送り、生死を判定する仕組み）を試すための再現環境です。
 
