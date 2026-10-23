@@ -2,6 +2,8 @@
 
 English | [日本語](README.ja.md)
 
+[![test](https://github.com/nhinata/nginx_with_health_check/actions/workflows/test.yml/badge.svg)](https://github.com/nhinata/nginx_with_health_check/actions/workflows/test.yml)
+
 A ready-to-run environment for trying **active health checks** (nginx periodically sends requests to each backend and marks it up or down) on open source nginx.
 
 Open source nginx only ships with passive health checks (`max_fails` / `fail_timeout`), which take a server out of rotation after real requests to it fail. Active health checks are a feature of the commercial NGINX Plus, so this repository builds nginx with the third-party [nginx_upstream_check_module](https://github.com/yaoweibin/nginx_upstream_check_module).
@@ -29,7 +31,7 @@ Each backend returns its own hostname at `/` and `ok` at `/health.html`.
 
 ## Quick start
 
-Requirements: Docker with Compose v2. Ports 80 and 8080 must be free. Tested on ARM64 (Apple Silicon).
+Requirements: Docker with Compose v2. Ports 80 and 8080 must be free. Tested on x86_64 and ARM64.
 
 ```sh
 docker compose up -d --build
@@ -87,6 +89,16 @@ You can follow the checks with `docker compose logs nginx`:
 [error] 9#0: disable check peer: 172.19.0.3:80
 [error] 8#0: enable check peer: 172.19.0.3:80
 ```
+
+## Running the tests
+
+`scripts/test.sh` starts the demo and checks that a stopped or paused backend is marked down, receives no traffic while down, and comes back up. It stops the containers when it finishes.
+
+```sh
+./scripts/test.sh
+```
+
+The same script runs on GitHub Actions for every push and pull request, and weekly, on both x86_64 and ARM64 runners.
 
 ## Configuration
 
