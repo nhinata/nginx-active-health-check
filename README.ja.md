@@ -10,6 +10,8 @@ OSS 版 nginx に標準で備わっているのは、実際のリクエストが
 
 `docker compose up` だけで nginx とバックエンド 5 台が起動し、バックエンドを止めると down と判定され、戻すと up に復帰する様子を手元で確認できます。
 
+![backend03 を止めると状態ページで down になり、起動し直すと up に戻る様子](docs/demo.gif)
+
 > 学習・検証用のサンプルです。本番で active health check を使う場合は、標準で同機能を持つ NGINX Plus・Tengine・HAProxy なども検討してください。
 
 ## 構成
