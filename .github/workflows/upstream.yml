@@ -16,17 +16,25 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       TITLE: Upstream update available
+      HOWTO: |
+        To update the module, replace the files in `docker/nginx/nginx_upstream_check_module/`, then update `MODULE_COMMIT` in `scripts/check-upstream.sh` and the commit links in `README.md` and `README.ja.md`.
+        To update nginx, change `NGINX_VERSION` in `docker/nginx/Dockerfile` and the version in both READMEs. If the minor version changed, also switch to the matching patch.
+        Close this issue once `./scripts/check-upstream.sh` reports up to date.
     steps:
       - uses: actions/checkout@v5
       - name: Open an issue when the module or nginx has an update
         run: |
-          if report=$(./scripts/check-upstream.sh); then
-            echo "$report"
-            exit 0
-          fi
+          status=0
+          report=$(./scripts/check-upstream.sh) || status=$?
           echo "$report"
+          # 0: up to date, 1: update available, anything else: the check failed
+          if [ "$status" -eq 0 ]; then
+            exit 0
+          elif [ "$status" -ne 1 ]; then
+            exit "$status"
+          fi
           open=$(gh issue list --state open --search "in:title \"$TITLE\"" --json number --jq length)
           if [ "$open" -eq 0 ]; then
-            printf '%s\n\n%s\n' "$report" "Update the bundled files or the Dockerfile, then close this issue." |
+            printf '%s\n\n%s\n' "$report" "$HOWTO" |
               gh issue create --title "$TITLE" --body-file -
           fi
