@@ -132,7 +132,9 @@ upstream api {
 
 With these settings, it took 15–16 seconds for a stopped or unresponsive backend to be marked down, and 4 seconds for it to come back up (one measurement each). Lower `interval` and `timeout` to detect failures faster.
 
-Until a backend is marked down, requests can still be sent to it. They wait for the proxy timeouts and are then retried on another backend. `nginx.conf` sets them to the default of 60 seconds, so you can see the values and change them:
+Until a backend is marked down, requests can still be sent to it. They wait for the proxy timeouts and are then retried on another backend. After one such failure, nginx's passive check (`max_fails=1 fail_timeout=10s` by default) also skips the backend for 10 seconds, even before the health check marks it down. Keep both enabled: the passive check reacts to the first failed request, while the active check finds failures without any traffic and decides when the backend is back. The status page and the check logs show only the active check, so you can still watch it on its own.
+
+`nginx.conf` sets the proxy timeouts to the default of 60 seconds, so you can see the values and change them:
 
 ```nginx
 proxy_connect_timeout  60s;   # stopped backend: no answer to connect
@@ -146,7 +148,7 @@ In one measurement, 30 requests sent right after a failure all returned 200. A f
 | `pause` | 6 of 30 waited 60s | 4 of 30 waited up to 5s |
 | `stop` | 4 of 30 waited 60s | 7 of 30 waited up to 1s |
 
-If you lower `proxy_read_timeout`, keep it longer than your slowest normal response, or slow requests will be cut off and retried. By default, nginx does not retry non-idempotent requests such as POST once they have been sent, so those fail instead.
+`proxy_read_timeout` limits the time between two reads from the backend, not the whole response. If you lower it, keep it longer than the longest time your backend takes to start responding or pauses while sending. A request that times out before the response headers arrive is retried on another backend; one that times out after that is cut off and fails. By default, nginx also does not retry non-idempotent requests such as POST once they have been sent, so those fail instead.
 
 The status page is served by a separate server on port 8080, which `docker-compose.yml` publishes only on the host's `127.0.0.1`, so the backend layout is not exposed to the outside:
 
