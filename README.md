@@ -132,6 +132,22 @@ upstream api {
 
 With these settings, it took 15–16 seconds for a stopped or unresponsive backend to be marked down, and 4 seconds for it to come back up (one measurement each). Lower `interval` and `timeout` to detect failures faster.
 
+Until a backend is marked down, requests can still be sent to it. They wait for the proxy timeouts and are then retried on another backend. `nginx.conf` sets them to the default of 60 seconds, so you can see the values and change them:
+
+```nginx
+proxy_connect_timeout  60s;   # stopped backend: no answer to connect
+proxy_read_timeout     60s;   # unresponsive backend: connected, but no response
+```
+
+In one measurement, 30 requests sent right after a failure all returned 200. A few of them took longer than the rest:
+
+| Failure | 60s (as shipped) | Changed to 1s / 5s |
+|---|---|---|
+| `pause` | 6 of 30 waited 60s | 4 of 30 waited up to 5s |
+| `stop` | 4 of 30 waited 60s | 7 of 30 waited up to 1s |
+
+If you lower `proxy_read_timeout`, keep it longer than your slowest normal response, or slow requests will be cut off and retried. By default, nginx does not retry non-idempotent requests such as POST once they have been sent, so those fail instead.
+
 The status page is served by a separate server on port 8080, which `docker-compose.yml` publishes only on the host's `127.0.0.1`, so the backend layout is not exposed to the outside:
 
 ```nginx
