@@ -172,6 +172,8 @@ server {
 
 `docker/nginx/nginx_upstream_check_module/` contains the files needed for the build, plus the README, taken from commit [`02c6c9d`](https://github.com/yaoweibin/nginx_upstream_check_module/tree/02c6c9de14ca1e60adb9f48179707c57d532d622) of [yaoweibin/nginx_upstream_check_module](https://github.com/yaoweibin/nginx_upstream_check_module). The module is BSD licensed; its copyright notice and license text are in the `README` in that directory.
 
+A weekly GitHub Actions job (`scripts/check-upstream.sh`) checks for new commits to the module and new stable nginx releases, and opens an issue when there is an update. Dependabot keeps the base images and actions up to date.
+
 ## License
 
 This repository is licensed under the [MIT License](LICENSE). The files under `docker/nginx/nginx_upstream_check_module/` remain under the module's own BSD license, as described above.
