@@ -1,0 +1,32 @@
+name: upstream
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TITLE: Upstream update available
+    steps:
+      - uses: actions/checkout@v5
+      - name: Open an issue when the module or nginx has an update
+        run: |
+          if report=$(./scripts/check-upstream.sh); then
+            echo "$report"
+            exit 0
+          fi
+          echo "$report"
+          open=$(gh issue list --state open --search "in:title \"$TITLE\"" --json number --jq length)
+          if [ "$open" -eq 0 ]; then
+            printf '%s\n\n%s\n' "$report" "Update the bundled files or the Dockerfile, then close this issue." |
+              gh issue create --title "$TITLE" --body-file -
+          fi
