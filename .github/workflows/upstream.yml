@@ -22,6 +22,8 @@ jobs:
         Close this issue once `./scripts/check-upstream.sh` reports up to date.
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Open an issue when the module or nginx has an update
         run: |
           status=0
